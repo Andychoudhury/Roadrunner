@@ -3,13 +3,17 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
+import com.acmerobotics.roadrunner.Trajectory;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
@@ -30,82 +34,88 @@ public class TestAuto extends LinearOpMode {
             leftShooter.setDirection(DcMotorSimple.Direction.FORWARD);
         }
 
-        public class LiftUp implements Action {
+        public class SpinUp implements Action {
             private boolean initialized = false;
+            private final Action sleep = new SleepAction(5.0);
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    leftShooter.setPower(0.8);
+                    leftShooter.setVelocity(800);
                     initialized = true;
                 }
 
-                double pos = leftShooter.getCurrentPosition();
-                packet.put("liftPos", pos);
-                if (pos < 3000.0) {
-                    return true;
-                } else {
-                    leftShooter.setPower(0);
-                    return false;
-                }
+                double vel = leftShooter.getVelocity();
+                packet.put("shooterVelocity", vel);
+                return sleep.run(packet);
             }
         }
-        public Action liftUp() {
-            return new LiftUp();
-        }
 
-        public class LiftDown implements Action {
-            private boolean initialized = false;
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                if (!initialized) {
-                    leftShooter.setPower(-0.8);
-                    initialized = true;
-                }
-
-                double pos = leftShooter.getCurrentPosition();
-                packet.put("liftPos", pos);
-                if (pos > 100.0) {
-                    return true;
-                } else {
-                    leftShooter.setPower(0);
-                    return false;
-                }
-            }
-        }
-        public Action liftDown(){
-            return new LiftDown();
+        public Action spinUp() {
+            return new SpinUp();
         }
     }
 
-    public class Claw {
-        private Servo claw;
+    public class RightShooter {
+        private DcMotorEx rightShooter;
 
-        public Claw(HardwareMap hardwareMap) {
-            claw = hardwareMap.get(Servo.class, "claw");
+        public RightShooter(HardwareMap hardwareMap) {
+            rightShooter = hardwareMap.get(DcMotorEx.class, "RightShooter");
+            rightShooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            rightShooter.setDirection(DcMotorSimple.Direction.REVERSE);
         }
 
-        public class CloseClaw implements Action {
+        public class SpinUp implements Action {
+            private boolean initialized = false;
+            private final Action sleep = new SleepAction(5.0);
+
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                claw.setPosition(0.55);
+                if (!initialized) {
+                    rightShooter.setVelocity(800);
+                    initialized = true;
+                }
+
+                double vel = rightShooter.getVelocity();
+                packet.put("shooterVelocity", vel);
+                return sleep.run(packet);
+            }
+        }
+
+        public Action spinUp() {
+            return new SpinUp();
+        }
+    }
+
+    public class Srvo {
+        private CRServo srvo;
+
+        public Srvo(HardwareMap hardwareMap) {
+            srvo = hardwareMap.get(CRServo.class, "servo");
+        }
+
+        public class Shoot implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                srvo.setPower(1);
                 return false;
             }
         }
-        public Action closeClaw() {
-            return new CloseClaw();
-        }
 
-        public class OpenClaw implements Action {
+        public class Stop implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                claw.setPosition(1.0);
+                srvo.setPower(0);
                 return false;
             }
         }
-        public Action openClaw() {
-            return new OpenClaw();
+        
+        public Action shoot() {
+            return new Shoot();
+        }
+        
+        public Action stop() {
+            return new Stop();
         }
     }
 
@@ -113,23 +123,14 @@ public class TestAuto extends LinearOpMode {
     public void runOpMode() {
         Pose2d initialPose = new Pose2d(0, 0, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
-        Claw claw = new Claw(hardwareMap);
+        Srvo srvo = new Srvo(hardwareMap);
         LeftShooter leftShooter = new LeftShooter(hardwareMap);
+        RightShooter rightShooter = new RightShooter(hardwareMap);
 
         // vision here that outputs position
         int visionOutputPosition = 1;
-
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                .lineToYSplineHeading(33, Math.toRadians(0))
-                .waitSeconds(2)
-                .setTangent(Math.toRadians(90))
-                .lineToY(48)
-                .setTangent(Math.toRadians(0))
-                .lineToX(32)
-                .strafeTo(new Vector2d(44.5, 30))
-                .turn(Math.toRadians(180))
-                .lineToX(47.5)
-                .waitSeconds(3);
+                .splineTo(new Vector2d(-8,62),Math.toRadians(83.9172));
         TrajectoryActionBuilder tab2 = drive.actionBuilder(initialPose)
                 .lineToY(37)
                 .setTangent(Math.toRadians(0))
@@ -148,7 +149,6 @@ public class TestAuto extends LinearOpMode {
                 .build();
 
         // actions that need to happen on init; for instance, a claw tightening.
-        Actions.runBlocking(claw.closeClaw());
 
 
         while (!isStopRequested() && !opModeIsActive()) {
@@ -175,11 +175,23 @@ public class TestAuto extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
+                        new ParallelAction(
                         trajectoryActionChosen,
-                        leftShooter.liftUp(),
-                        claw.openClaw(),
-                        leftShooter.liftDown(),
-                        trajectoryActionCloseOut
+                        new ParallelAction(
+                            leftShooter.spinUp(),
+                            rightShooter.spinUp()
+                        )
+                        ),
+                        srvo.shoot(),
+                        new SleepAction(1),
+                        srvo.stop(),
+                        new SleepAction(.5),
+                        srvo.shoot(),
+                        new SleepAction(.2),
+                        srvo.stop(),
+                        new SleepAction(.5),
+                        srvo.shoot(),
+                        new SleepAction(.5)
                 )
         );
     }
