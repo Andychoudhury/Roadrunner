@@ -7,7 +7,6 @@ import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
-import com.acmerobotics.roadrunner.Trajectory;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
@@ -16,15 +15,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
-@Autonomous(name = "BLUE_TEST_AUTO_PIXEL", group = "Autonomous")
-public class TestAuto extends LinearOpMode {
+@Autonomous(name = "RedAutoNew", group = "Autonomous")
+public class RedAutoNew extends LinearOpMode {
     public class LeftShooter {
         private DcMotorEx leftShooter;
 
@@ -36,12 +33,12 @@ public class TestAuto extends LinearOpMode {
 
         public class SpinUp implements Action {
             private boolean initialized = false;
-            private final Action sleep = new SleepAction(5.0);
+            private final Action sleep = new SleepAction(7.0);
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    leftShooter.setVelocity(800);
+                    leftShooter.setVelocity(760);
                     initialized = true;
                 }
 
@@ -67,12 +64,12 @@ public class TestAuto extends LinearOpMode {
 
         public class SpinUp implements Action {
             private boolean initialized = false;
-            private final Action sleep = new SleepAction(5.0);
+            private final Action sleep = new SleepAction(7.0);
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    rightShooter.setVelocity(800);
+                    rightShooter.setVelocity(760);
                     initialized = true;
                 }
 
@@ -130,7 +127,7 @@ public class TestAuto extends LinearOpMode {
         // vision here that outputs position
         int visionOutputPosition = 1;
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                .splineTo(new Vector2d(-8,62),Math.toRadians(83.9172));
+                .splineTo(new Vector2d(-8,65),Math.toRadians(84.6685));
         TrajectoryActionBuilder tab2 = drive.actionBuilder(initialPose)
                 .lineToY(37)
                 .setTangent(Math.toRadians(0))
@@ -148,6 +145,8 @@ public class TestAuto extends LinearOpMode {
                 .strafeTo(new Vector2d(48, 12))
                 .build();
 
+        TrajectoryActionBuilder endStrafe = drive.actionBuilder(initialPose)
+                .strafeTo(new Vector2d(-25,1));
         // actions that need to happen on init; for instance, a claw tightening.
 
 
@@ -173,25 +172,28 @@ public class TestAuto extends LinearOpMode {
             trajectoryActionChosen = tab3.build();
         }
 
+        Action EndStrafe = endStrafe.build();
+
         Actions.runBlocking(
                 new SequentialAction(
                         new ParallelAction(
-                        trajectoryActionChosen,
-                        new ParallelAction(
-                            leftShooter.spinUp(),
-                            rightShooter.spinUp()
-                        )
+                            trajectoryActionChosen,
+                            new ParallelAction(
+                                leftShooter.spinUp(),
+                                rightShooter.spinUp()
+                            )
                         ),
                         srvo.shoot(),
                         new SleepAction(1),
                         srvo.stop(),
-                        new SleepAction(.5),
+                        new SleepAction(1),
                         srvo.shoot(),
-                        new SleepAction(.2),
+                        new SleepAction(.3),
                         srvo.stop(),
-                        new SleepAction(.5),
+                        new SleepAction(1),
                         srvo.shoot(),
-                        new SleepAction(.5)
+                        new SleepAction(1),
+                        EndStrafe
                 )
         );
     }
