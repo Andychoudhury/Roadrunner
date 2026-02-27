@@ -38,7 +38,7 @@ public class RedAutoNew extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    leftShooter.setVelocity(760);
+                    leftShooter.setVelocity(740);
                     initialized = true;
                 }
 
@@ -69,7 +69,7 @@ public class RedAutoNew extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    rightShooter.setVelocity(760);
+                    rightShooter.setVelocity(740);
                     initialized = true;
                 }
 

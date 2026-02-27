@@ -24,47 +24,23 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 @Config
 @Autonomous(name = "BlueBackNew", group = "Autonomous")
 public class BlueBackNew extends LinearOpMode {
-    public class LeftShooter {
+    public class Shooters {
+        private DcMotorEx rightShooter;
         private DcMotorEx leftShooter;
 
-        public LeftShooter(HardwareMap hardwareMap) {
+        public Shooters(HardwareMap hardwareMap) {
+            rightShooter = hardwareMap.get(DcMotorEx.class, "RightShooter");
+            rightShooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            rightShooter.setDirection(DcMotorSimple.Direction.REVERSE);
+            rightShooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,new PIDFCoefficients(25,2.25,10.00,0));
+
             leftShooter = hardwareMap.get(DcMotorEx.class, "LeftShooter");
             leftShooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             leftShooter.setDirection(DcMotorSimple.Direction.FORWARD);
             leftShooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,new PIDFCoefficients(25,2.25,10.00,0));
         }
 
-        public class SpinUp implements Action {
-            private boolean initialized = false;
-            private final Action sleep = new SleepAction(10.0);
 
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                if (!initialized) {
-                    leftShooter.setVelocity(860);
-                    initialized = true;
-                }
-
-                double vel = leftShooter.getVelocity();
-                packet.put("shooterVelocity", vel);
-                return sleep.run(packet);
-            }
-        }
-
-        public Action spinUp() {
-            return new SpinUp();
-        }
-    }
-
-    public class RightShooter {
-        private DcMotorEx rightShooter;
-
-        public RightShooter(HardwareMap hardwareMap) {
-            rightShooter = hardwareMap.get(DcMotorEx.class, "RightShooter");
-            rightShooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            rightShooter.setDirection(DcMotorSimple.Direction.REVERSE);
-            rightShooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,new PIDFCoefficients(25,2.25,10.00,0));
-        }
 
         public class SpinUp implements Action {
             private boolean initialized = false;
@@ -73,12 +49,16 @@ public class BlueBackNew extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    rightShooter.setVelocity(860);
+                    rightShooter.setVelocity(850);
+                    leftShooter.setVelocity(850);
                     initialized = true;
                 }
 
-                double vel = rightShooter.getVelocity();
-                packet.put("shooterVelocity", vel);
+                double vel1 = leftShooter.getVelocity();
+                double vel2 = rightShooter.getVelocity();
+                telemetry.addData("Left Shooter Velocity", vel1);
+                telemetry.addData("Right Shotoer Velocity",vel2);
+                telemetry.update();
                 return sleep.run(packet);
             }
         }
@@ -125,14 +105,13 @@ public class BlueBackNew extends LinearOpMode {
         Pose2d initialPose = new Pose2d(0, 0, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
         Srvo srvo = new Srvo(hardwareMap);
-        LeftShooter leftShooter = new LeftShooter(hardwareMap);
-        RightShooter rightShooter = new RightShooter(hardwareMap);
+        Shooters shooters = new Shooters(hardwareMap);
 
         // vision here that outputs position
         int visionOutputPosition = 1;
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
                 .splineToConstantHeading(new Vector2d(6,-6),Math.toRadians(117))
-                .turn(Math.toRadians(47.5));
+                .turn(Math.toRadians(45.5));
         TrajectoryActionBuilder tab2 = drive.actionBuilder(initialPose)
                 .lineToY(37)
                 .setTangent(Math.toRadians(0))
@@ -152,7 +131,7 @@ public class BlueBackNew extends LinearOpMode {
 
         TrajectoryActionBuilder endStrafe = drive.actionBuilder(initialPose)
                 .setTangent(180)
-                .splineToSplineHeading(new Pose2d(new Vector2d(70,-10),Math.toRadians(40)),Math.toRadians(170));
+                .strafeTo(new Vector2d(35,-10));
         // actions that need to happen on init; for instance, a claw tightening.
 
 
@@ -182,13 +161,8 @@ public class BlueBackNew extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        new ParallelAction(
-                            trajectoryActionChosen,
-                            new ParallelAction(
-                                leftShooter.spinUp(),
-                                rightShooter.spinUp()
-                            )
-                        ),
+                        trajectoryActionChosen,
+                        shooters.spinUp(),
                         srvo.shoot(),
                         new SleepAction(1),
                         srvo.stop(),
