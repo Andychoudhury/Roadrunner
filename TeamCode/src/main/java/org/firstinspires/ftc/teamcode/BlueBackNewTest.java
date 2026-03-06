@@ -22,8 +22,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 @Config
-@Autonomous(name = "BlueBackNew", group = "Autonomous")
-public class BlueBackNew extends LinearOpMode {
+@Autonomous(name = "BlueBackNewTest", group = "Autonomous")
+public class BlueBackNewTest extends LinearOpMode {
     public class Shooters {
         private DcMotorEx rightShooter;
         private DcMotorEx leftShooter;
@@ -51,10 +51,15 @@ public class BlueBackNew extends LinearOpMode {
                 if (!initialized) {
                     rightShooter.setVelocity(850);
                     leftShooter.setVelocity(850);
+
                     initialized = true;
+
                 }
 
-                return sleep.run(packet);
+                double vel1 = leftShooter.getVelocity();
+                double vel2 = rightShooter.getVelocity();
+                return !(vel1 >= 850 * 0.97) || !(vel2 >= 850 * 0.97) || !(vel1 <= 850 * 1.03) || !(vel2 <= 850 * 1.03) || !(Math.abs(vel2 - vel1) <= 10|| sleep.run(packet));
+
             }
         }
 
