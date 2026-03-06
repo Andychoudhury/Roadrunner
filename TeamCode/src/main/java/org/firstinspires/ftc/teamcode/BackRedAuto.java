@@ -37,7 +37,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name="Back Red Auto")
+@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name="Back Red Old")
 public class BackRedAuto extends LinearOpMode {
 
     DcMotor frontleft = null;
