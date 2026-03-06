@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Math.atan;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
@@ -135,7 +136,8 @@ public class TeleopTest extends LinearOpMode {
 
             if (gamepad1.left_bumper) {
                 if (red) {
-                    drive.localizer.setPose(new Pose2d(0,0,0));
+                    double heading = 45 + atan(pose.position.y+24/pose.position.x);
+                    drive.localizer.setPose(new Pose2d(0,0,heading));
                 }
                 drive.localizer.setPose(new Pose2d(0,0,0));
             }
