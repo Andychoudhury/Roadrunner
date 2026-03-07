@@ -198,5 +198,6 @@ public class BlueBackNewTest extends LinearOpMode {
                 )
                 )
         );
+        PoseStorage.currentPose = drive.localizer.getPose();
     }
 }

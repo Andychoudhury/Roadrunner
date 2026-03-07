@@ -198,5 +198,7 @@ public class RedBackNewTest extends LinearOpMode {
                         )
                 )
         );
+        PoseStorage.currentPose = drive.localizer.getPose();
+
     }
 }
