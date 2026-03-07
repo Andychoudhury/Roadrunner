@@ -4,7 +4,10 @@ import static java.lang.Math.atan;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
+import com.acmerobotics.roadrunner.Actions;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -13,12 +16,15 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.acmerobotics.roadrunner.HolonomicController;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+
 
 import java.util.List;
 
@@ -95,6 +101,8 @@ public class TeleopTest extends LinearOpMode {
         boolean highSpeed = false;
 
         boolean fieldCentric = false;
+        double d;
+        double i;
 
         boolean red = true;
         // Wait for the game to start (driver presses START)
@@ -104,6 +112,7 @@ public class TeleopTest extends LinearOpMode {
         // Assuming you're using StandardTrackingWheelLocalizer.java
         // Switch this class to something else (Like TwoWheeTrackingLocalizer.java) if your configuration is different
         MecanumDrive drive = new MecanumDrive(hardwareMap,new Pose2d(0,0,0));
+        drive.localizer.setPose(PoseStorage.currentPose);
 
         // Set your initial pose to x: 10, y: 10, facing 90 degrees
 
@@ -135,13 +144,23 @@ public class TeleopTest extends LinearOpMode {
             telemetry.addData("heading", Math.toDegrees(myPose.heading.toDouble()));
 
             if (gamepad1.left_bumper) {
-                if (red) {
-                    double heading = 45 + atan(pose.position.y+24/pose.position.x);
-                    drive.localizer.setPose(new Pose2d(0,0,heading));
-                }
+//                if (red) {
+//                    double heading = -3*Math.PI/4 - atan(pose.position.y+24/pose.position.x);
+//                    drive.localizer.setPose(new Pose2d(0,0,heading));
+//                }
                 drive.localizer.setPose(new Pose2d(0,0,0));
             }
-
+            if (gamepad1.left_stick_button) {
+//                ElapsedTime timer = new ElapsedTime();
+//                if (!(-5<pose.heading.toDouble() && pose.heading.toDouble()<5)) {
+//                    double target = 0;
+//                    double heading = pose.heading.toDouble();
+//                    double error = target - heading;
+//                    double d = (error-lastError)/timer.seconds();
+//                    double i = i + error*timer.seconds();
+//                    drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0, 0), 0));
+//                }
+            }
             // Insert whatever teleop code you're using
             double max;
 
@@ -165,7 +184,7 @@ public class TeleopTest extends LinearOpMode {
                 speedMultiplier = 1.00;
             }
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double h = (myPose.heading.toDouble())%360;
+            double h = (myPose.heading.toDouble());
             double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
             double lateral =  gamepad1.left_stick_x;
             double yaw     =  gamepad1.right_stick_x;
@@ -272,6 +291,7 @@ public class TeleopTest extends LinearOpMode {
         }
         visionPortal.close();
     }
+
     private void initAprilTag() {
 
         // Create the AprilTag processor.
