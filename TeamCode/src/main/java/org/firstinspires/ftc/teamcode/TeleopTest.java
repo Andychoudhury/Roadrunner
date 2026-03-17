@@ -5,9 +5,12 @@ import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
 import com.acmerobotics.roadrunner.Actions;
+import com.acmerobotics.roadrunner.HeadingPath;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Pose2dDual;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.Vector2dDual;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -114,6 +117,8 @@ public class TeleopTest extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap,new Pose2d(0,0,0));
         drive.localizer.setPose(PoseStorage.currentPose);
 
+        HeadingPIDController headingPID = new HeadingPIDController(1,1);
+        HolonomicController pid3 = new HolonomicController(MecanumDrive.PARAMS.axialGain,MecanumDrive.PARAMS.lateralGain,MecanumDrive.PARAMS.headingGain,MecanumDrive.PARAMS.axialVelGain,MecanumDrive.PARAMS.lateralVelGain,MecanumDrive.PARAMS.headingVelGain);
         // Set your initial pose to x: 10, y: 10, facing 90 degrees
 
 
@@ -135,6 +140,8 @@ public class TeleopTest extends LinearOpMode {
             // Make sure to call drive.update() on *every* loop
             // Increasing loop time by utilizing bulk reads and minimizing writes will increase your odometry accuracy
             drive.updatePoseEstimate();
+
+
 
             // Retrieve your pose
             Pose2d myPose = drive.localizer.getPose();
@@ -160,6 +167,7 @@ public class TeleopTest extends LinearOpMode {
 //                    double i = i + error*timer.seconds();
 //                    drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0, 0), 0));
 //                }
+
             }
             // Insert whatever teleop code you're using
             double max;

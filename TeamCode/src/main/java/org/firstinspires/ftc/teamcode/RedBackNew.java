@@ -112,7 +112,7 @@ public class RedBackNew extends LinearOpMode {
         int visionOutputPosition = 1;
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
                 .splineToConstantHeading(new Vector2d(-6,-6),Math.toRadians(63))
-                .turn(Math.toRadians(-45.5));
+                .turn(Math.toRadians(-47));
         TrajectoryActionBuilder tab2 = drive.actionBuilder(initialPose)
                 .lineToY(37)
                 .setTangent(Math.toRadians(0))
@@ -178,5 +178,6 @@ public class RedBackNew extends LinearOpMode {
 
                 )
         );
+        PoseStorage.currentPose = drive.localizer.getPose();
     }
 }

@@ -121,7 +121,7 @@ public class BlueBackNewTest extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d initialPose = new Pose2d(0, 0, Math.toRadians(90));
+        Pose2d initialPose = new Pose2d(0, 0, Math.toRadians(-90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
         Srvo srvo = new Srvo(hardwareMap);
         Shooters shooters = new Shooters(hardwareMap);
@@ -129,8 +129,8 @@ public class BlueBackNewTest extends LinearOpMode {
         // vision here that outputs position
         int visionOutputPosition = 1;
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                .splineToConstantHeading(new Vector2d(6,-6),Math.toRadians(117))
-                .turn(Math.toRadians(46.5));
+                .splineToConstantHeading(new Vector2d(-6,6),Math.toRadians(-117))
+                .turn(Math.toRadians(47));
         TrajectoryActionBuilder tab2 = drive.actionBuilder(initialPose)
                 .lineToY(37)
                 .setTangent(Math.toRadians(0))
@@ -150,7 +150,7 @@ public class BlueBackNewTest extends LinearOpMode {
 
         TrajectoryActionBuilder endStrafe = drive.actionBuilder(initialPose)
                 .setTangent(180)
-                .strafeTo(new Vector2d(35,-10));
+                .strafeTo(new Vector2d(-35,10));
         // actions that need to happen on init; for instance, a claw tightening.
 
 
