@@ -4,11 +4,13 @@ import static java.lang.Math.atan;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
-import com.acmerobotics.roadrunner.Actions;
+
+import com.acmerobotics.roadrunner.DualNum;
 import com.acmerobotics.roadrunner.HeadingPath;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Pose2dDual;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.Vector2dDual;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -20,6 +22,25 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.acmerobotics.roadrunner.HolonomicController;
+
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ParallelAction;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.ftc.Actions;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -51,6 +72,8 @@ public class TeleopTest extends LinearOpMode {
     private DcMotorEx leftShooter = null;
 
     private CRServo servo = null;
+
+
 
     public void runOpMode() {
 
@@ -108,6 +131,10 @@ public class TeleopTest extends LinearOpMode {
         double i;
 
         boolean red = true;
+
+        boolean headingLock = false;
+        boolean lastFrame = false;
+        double heading1 = 0;
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -132,11 +159,11 @@ public class TeleopTest extends LinearOpMode {
                 red = false;
             }
             Pose2d pose = telemetryAprilTag(red);
-            if (gamepad1.dpad_down) {
-                visionPortal.stopStreaming();
-            } else if (gamepad1.dpad_up) {
-                visionPortal.resumeStreaming();
-            }
+//            if (gamepad1.dpad_down) {
+//                visionPortal.stopStreaming();
+//            } else if (gamepad1.dpad_up) {
+//                visionPortal.resumeStreaming();
+//            }
             // Make sure to call drive.update() on *every* loop
             // Increasing loop time by utilizing bulk reads and minimizing writes will increase your odometry accuracy
             drive.updatePoseEstimate();
@@ -157,17 +184,29 @@ public class TeleopTest extends LinearOpMode {
 //                }
                 drive.localizer.setPose(new Pose2d(0,0,0));
             }
-            if (gamepad1.left_stick_button) {
-//                ElapsedTime timer = new ElapsedTime();
-//                if (!(-5<pose.heading.toDouble() && pose.heading.toDouble()<5)) {
-//                    double target = 0;
-//                    double heading = pose.heading.toDouble();
-//                    double error = target - heading;
-//                    double d = (error-lastError)/timer.seconds();
-//                    double i = i + error*timer.seconds();
-//                    drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0, 0), 0));
-//                }
+            if (gamepad1.left_stick_button && !lastFrame) {
+                headingLock = !headingLock;
+                 lastFrame = true;
+                if (headingLock) {
+                    heading1 = Math.toRadians(pose.heading.toDouble());
+                    if (heading1 < 0) {
+                        heading1 += 2*Math.PI;
+                    }
+                }
+            }
 
+            if (gamepad1.leftStickButtonWasReleased()) {
+                lastFrame = false;
+            }
+
+            if (headingLock) {
+                TrajectoryActionBuilder turn = drive.actionBuilder(myPose)
+                        .turn(heading1);
+                Actions.runBlocking(
+
+                                turn.build()
+
+                );
             }
             // Insert whatever teleop code you're using
             double max;
@@ -197,8 +236,8 @@ public class TeleopTest extends LinearOpMode {
             double lateral =  gamepad1.left_stick_x;
             double yaw     =  gamepad1.right_stick_x;
 
-            double rotX = lateral * Math.cos(-h) - axial * Math.sin(-h);
-            double rotY = lateral * Math.sin(-h) + axial * Math.cos(-h);
+            double rotX = lateral * cos(-h) - axial * sin(-h);
+            double rotY = lateral * sin(-h) + axial * cos(-h);
 
 
             double frontLeftPower = (fieldCentric) ?rotY + rotX + yaw : axial + lateral + yaw;
@@ -297,6 +336,7 @@ public class TeleopTest extends LinearOpMode {
             telemetry.addData("Field Centric",fieldCentric);
             telemetry.update();
         }
+
         visionPortal.close();
     }
 

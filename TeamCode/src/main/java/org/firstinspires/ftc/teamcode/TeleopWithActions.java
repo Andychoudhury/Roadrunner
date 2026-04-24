@@ -8,15 +8,18 @@ import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import java.util.ArrayList;
 import java.util.List;
+
+@TeleOp(name = "Teleop test test",group = "aLinear OpMode")
 
 public class TeleopWithActions extends LinearOpMode {
     public void runOpMode(){
     // Example snippet to illustrate the logic (not complete code)
 // Assumes you have a PID controller class (e.g., HeadingPIDController)
-    HeadingPIDController headingPID = new HeadingPIDController(...); // Initialize with gains
+    HeadingPIDController headingPID = new HeadingPIDController(0,0); // Initialize with gains
     double targetHeading = Math.toRadians(0); // Example target heading (0 degrees)
     boolean headingLockActive = false;
 
@@ -42,7 +45,7 @@ while (opModeIsActive()) {
 
         if (headingLockActive) {
             // Calculate the heading correction using the PID controller
-            double headingCorrection = headingPID.update(targetHeading, currentPose.getHeading());
+            double headingCorrection = headingPID.update(targetHeading, currentPose.heading.toDouble());
 
             // Pass the correction as the rotational power (rx)
             // Adjust x and y inputs for normal movement (field-centric is common here)
@@ -54,20 +57,21 @@ while (opModeIsActive()) {
             ));
         } else {
             // Normal driver control (field-centric code below for best results)
-            Vector2d input = new Vector2d(-gamepad1.left_stick_y, -gamepad1.left_stick_x).angleCast(-currentPose.heading);
-            drive.setWeightedDrivePower(new Pose2d(
-                    input.getX(),
-                    input.getY(),
+            Vector2d input = new Vector2d(-gamepad1.left_stick_y, -gamepad1.left_stick_x);
+            drive.setDrivePowers(new PoseVelocity2d(
+                    new Vector2d(
+                    input.x,
+                    input.y),
                     -gamepad1.right_stick_x
             ));
         }
 
         // Update localization
-        drive.update();
+        drive.localizer.update();
 
         // Telemetry updates
         telemetry.addData("Heading Lock Active", headingLockActive);
-        telemetry.addData("Current Heading", Math.toDegrees(currentPose.getHeading()));
+        telemetry.addData("Current Heading", Math.toDegrees(currentPose.heading.toDouble()));
         telemetry.update();
     }
 }}
